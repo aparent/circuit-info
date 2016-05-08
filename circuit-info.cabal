@@ -5,27 +5,44 @@ description:         Please see README.md
 homepage:            https://github.com/githubuser/circuit-info#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
+author:              Alex Parent
+maintainer:          aparent@uwaterloo.ca
 copyright:           2016 Author name here
-category:            Web
 build-type:          Simple
--- extra-source-files:
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
-  build-depends:       base >= 4.7 && < 5
+  exposed-modules:     Lib, ParseQC, Circuit, CircuitDiagram
+  ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N
+  build-depends:         base >= 4.7 && < 5
+                       , parsec 
+                       , text
+                       , vector
+                       , containers
+                       , diagrams
+                       , diagrams-svg
+                       , diagrams-lib
+                       , SVGFonts
   default-language:    Haskell2010
+  default-extensions:    OverloadedStrings
+                       , DeriveGeneric
+                       , FlexibleContexts
+                       , GADTs
 
-executable circuit-info-exe
+executable circuit-info
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , circuit-info
+                     , aeson
+                     , text
+                     , bytestring
   default-language:    Haskell2010
+  default-extensions:    OverloadedStrings
+                       , DeriveGeneric
+                       , TemplateHaskell
 
 test-suite circuit-info-test
   type:                exitcode-stdio-1.0
