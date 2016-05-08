@@ -18,10 +18,10 @@ import Circuit
 
 lWidth, targetRad, charSize, ctrlRad, colSpace :: Double
 lWidth = 0.07
-targetRad = 0.5
+targetRad = 0.4
 charSize = 1
 ctrlRad = 0.15
-colSpace = 0.2
+colSpace = 0.3
 
 -- | Takes a circuit, filename, and width then writes out a
 -- diagram of the circuit as an SVG
@@ -37,7 +37,7 @@ drawCirc c = hsep 0.0 [ txt
         ls = mconcat . fmap (mkLine.fromIntegral) $ [0.. (length.circLines) c -1 ]
           where mkLine y = ( hrule . width ) gs
                          # lwL lWidth
-                         # lc grey
+                         # lc black
                          # translateY y
         txt = mconcat . zipWith placeText (V.toList $ circLines c) $ fmap fromIntegral [0..(length.circLines) c -1 ]
           where placeText s y = (mkText s <> phantom (rect 4 1 :: D V2 Double))
