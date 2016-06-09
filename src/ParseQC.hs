@@ -7,17 +7,14 @@ module ParseQC
 import Data.Text (Text)
 import qualified Data.Text as T
 
-import Data.Vector (Vector)
 import qualified Data.Vector as V
 
-import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
 import qualified Data.List as L
 
 
 import Text.Parsec
-import Text.Parsec.Prim
 import Text.Parsec.Text
 
 import Circuit
@@ -71,8 +68,8 @@ qc = QC <$> info <*> gates
 
 comment :: Parser ()
 comment = do
-    char '#'
-    manyTill anyChar endOfLine
+    _ <- char '#'
+    _ <- manyTill anyChar endOfLine
     spaces
     return ()
 

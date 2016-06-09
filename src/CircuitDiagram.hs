@@ -5,13 +5,10 @@ import Diagrams.Prelude hiding ((<>))
 import Diagrams.Backend.SVG
 import Graphics.SVGFonts
 
-import Data.List (foldl')
-
 import Data.Monoid
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 
-import Data.Text (Text)
 import qualified Data.Text as T
 
 import Circuit

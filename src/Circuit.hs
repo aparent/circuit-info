@@ -5,10 +5,8 @@ module Circuit
     ) where
 
 import Data.Text (Text)
-import qualified Data.Text as T
 
 import Data.Vector (Vector)
-import qualified Data.Vector as V
 
 data Circuit =
     Circuit { circLines :: Vector Text
