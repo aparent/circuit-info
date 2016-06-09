@@ -27,9 +27,9 @@ qcToCirc :: QC -> Either ConversionError Circuit
 qcToCirc (QC infoLns gs) = do
     lines' <- lineNames
     gs' <- gateVals lines'
-    return $ Circuit { circLines = V.fromList lines', circGates = V.fromList gs'}
+    return Circuit { circLines = V.fromList lines', circGates = V.fromList gs'}
     where lineNames =
-            case (findInfoLine "v" $ infoLns) of
+            case findInfoLine "v" infoLns of
                 Just x -> Right $ infoLineVals x
                 Nothing -> Left NoVars
             where infoLineName (InfoLine n _ ) = n
@@ -46,7 +46,7 @@ qcToCirc (QC infoLns gs) = do
                             return $ Toff (V.fromList $ tail ld) (head ld)
                          | otherwise -> return $ OneBit name (head ld)
                     where lookupLineNumber nm =
-                            case (M.lookup nm indexMap) of
+                            case M.lookup nm indexMap of
                                 Just n -> Right n
                                 Nothing -> Left (UnknownLine nm)
 

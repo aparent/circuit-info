@@ -104,7 +104,7 @@ getDrawCols = (\(x,y) -> x ++ [y]) . V.foldl' colFold ([[]],[])
         gateToRange :: Gate -> (Int,Int)
         gateToRange g =
           case g of
-            Toff ctrls t -> ((max t $ V.maximum ctrls), (min t $ V.minimum ctrls))
+            Toff ctrls t -> (max t $ V.maximum ctrls, min t $ V.minimum ctrls)
             OneBit _ t -> (t,t)
         fits [] _ = True
         fits rs r = all (notInRange r) rs
