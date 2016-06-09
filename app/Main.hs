@@ -19,6 +19,7 @@ import Options.Applicative
 
 main :: IO ()
 main = do
+    progOpts <- execParser opts
     qc <- parseQC "stdin" <$> getContents
     case qc of
       Left x ->
@@ -29,7 +30,7 @@ main = do
               Left x ->
                   hPrint stderr x
               Right circ' ->
-                  writeCircInfo circ'
+                  writeCircInfo circ' (imagePath progOpts)
 
 data ProgOptions = ProgOptions
   { imagePath :: String }
@@ -45,20 +46,22 @@ opts = info (helper <*> options)
           options = ProgOptions
               <$> strOption
               ( short 'i'
+              <> value "circ.svg"
+	      <> showDefault
               <> metavar "PATH"
-              <> help "Output image to PATH" )
+              <> help "Output svg image to PATH" )
 
-writeCircInfo :: Circuit -> IO ()
-writeCircInfo circ = do
+writeCircInfo :: Circuit -> String -> IO ()
+writeCircInfo circ imgPath = do
     let circInfo = CircuitInfo {
              numGates = gateCount circ
            , numBits = (length . circLines) circ
            , numToff = 0
            , numT = 0
-           , circuitFile = "circ.svg"
+           , circuitFile = imgPath
           }
     BS.putStrLn . encode $ circInfo
-    circuitToSvg circ "circ.svg" 1000
+    circuitToSvg circ imgPath 1000
 
 data CircuitInfo = CircuitInfo {
       numGates :: Int
