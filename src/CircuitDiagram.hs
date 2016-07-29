@@ -5,6 +5,8 @@ import Diagrams.Prelude hiding ((<>))
 import Diagrams.Backend.SVG
 import Graphics.SVGFonts
 
+import qualified Debug.Trace as D
+
 import Data.Monoid
 import Data.Vector (Vector)
 import qualified Data.Vector as V
@@ -42,42 +44,38 @@ drawCirc c = hsep 0.0 [ txt
                 mkText s = text (T.unpack s)
                          # fontSize (local 0.5)
         drawGates = hsep colSpace . map (mconcat . map drawGate) . getDrawCols
-        drawGate g =
-          case g of
-            Toff ctrls t -> drawCnot (fromIntegral t) $ fmap fromIntegral ctrls
-            OneBit nm t -> drawOneBit (T.head $ T.toUpper nm) $ fromIntegral t
+
+drawGate :: Gate -> Diagram B
+drawGate gate@(Toff cs t) =
+                 circle targetRad # lwL lWidth # translateY (fromIntegral t)
+              <> controls
+              <> line
+  where line = drawLine 0 (top - bottom)
+             # translateY bottom
+          where top | maxY == t = fromIntegral maxY + targetRad
+                    | otherwise = fromIntegral maxY
+                bottom | minY == t = fromIntegral minY - targetRad
+                       | otherwise = fromIntegral minY
+                ctrlLns = fmap (fromIntegral . getCtrlLn) cs
+                (maxY,minY) = gateToRange gate
+        controls = mconcat . fmap drawCtrl . V.toList $ cs
+drawGate (OneBit nm t) = (symb <> base) # translateY (fromIntegral t)
+  where symb = drawChar $ T.head nm
+        base = square (1.7*targetRad)
+             # lw thin
+             # fc white
 
 drawChar :: Char -> Diagram B
 drawChar c = strokeP (textSVG' (TextOpts bit INSIDE_H KERN False charSize charSize) [c])
              # lw 0.0
              # fc black
 
-drawOneBit :: Char -> Double -> Diagram B
-drawOneBit ch t = (symb <> base)  # translateY t
-  where symb = drawChar ch
-        base = square (1.7*targetRad)
-             # lw thin
-             # fc white
 
+drawCtrl :: Control -> Diagram B
+drawCtrl (Neg y) = circle ctrlRad # fc white # translateY (fromIntegral y)
+drawCtrl (Pos y) = circle ctrlRad # fc black # translateY (fromIntegral y)
 
-drawCnot :: Double -> Vector Double -> Diagram B
-drawCnot t cs =  circle targetRad # lwL lWidth # translateY t
-              <> controls
-              <> line
-  where line = drawLine 0 (top - bottom)
-             # translateY bottom
-          where top | maxY == t = maxY + targetRad
-                    | otherwise = maxY
-                bottom | minY == t = minY - targetRad
-                       | otherwise = minY
-                maxY = max t $ maximum cs
-                minY = min t $ minimum cs
-        controls = mconcat . V.toList . fmap drawCtrl $ cs
-
-drawCtrl :: Double -> Diagram B
-drawCtrl y = circle ctrlRad # fc black # translateY y
-
-drawSwap :: Double -> Double -> Vector Double -> Diagram B
+drawSwap :: Double -> Double -> Vector Control -> Diagram B
 drawSwap t1 t2 cs = targ # translateY t1
                  <> targ # translateY t2
                  <> controls
@@ -86,12 +84,23 @@ drawSwap t1 t2 cs = targ # translateY t1
                 <> drawLine 1 (-1) # center
         line = drawLine 0 (top - bottom)
              # translateY bottom
-          where top = max (max t1 t2) (V.maximum cs)
-                bottom = min (min t1 t2) (V.minimum cs)
-        controls = mconcat . V.toList . fmap drawCtrl $ cs
+          where ctrlLns = fmap (fromIntegral . getCtrlLn) cs
+                top = max (max t1 t2) (V.maximum ctrlLns)
+                bottom = min (min t1 t2) (V.minimum ctrlLns)
+        controls = mconcat . fmap drawCtrl . V.toList $ cs
 
 drawLine :: Double -> Double -> Diagram B
 drawLine x y = fromSegments [straight $ r2(x,y) ] # lwL lWidth
+
+gateToRange :: Gate -> (Int,Int)
+gateToRange g =
+  case g of
+    Toff ctrls t -> if null ctrls then
+                      (t,t)
+                    else
+                      let ctrlLns = fmap getCtrlLn ctrls
+                      in (max t $ V.maximum ctrlLns, min t $ V.minimum ctrlLns)
+    OneBit _ t -> (t,t)
 
 -- | Groups a list of gates such that each group can be drawn without
 -- overlap in the same column
@@ -101,11 +110,6 @@ getDrawCols = (\(x,y) -> x ++ [y]) . V.foldl' colFold ([[]],[])
           if fits (fmap gateToRange curr) (gateToRange next)
           then (res, next : curr)
           else (res ++ [curr], [next])
-        gateToRange :: Gate -> (Int,Int)
-        gateToRange g =
-          case g of
-            Toff ctrls t -> (max t $ V.maximum ctrls, min t $ V.minimum ctrls)
-            OneBit _ t -> (t,t)
         fits [] _ = True
         fits rs r = all (notInRange r) rs
           where notInRange x y = minT x > maxT y || maxT x < minT y

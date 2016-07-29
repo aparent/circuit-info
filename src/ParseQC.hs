@@ -5,12 +5,11 @@ module ParseQC
     ) where
 
 import Data.Text (Text)
+
 import qualified Data.Text as T
-
+import qualified Data.Char as C
 import qualified Data.Vector as V
-
 import qualified Data.Map.Strict as M
-
 import qualified Data.List as L
 
 
@@ -38,17 +37,22 @@ qcToCirc (QC infoLns gs) = do
           gateVals lns = mapM toGate gs
             where indexMap = M.fromList (zip lns [0..])
                   toGate (ParsedGate name lineDeps) = do
-                     ld <- mapM lookupLineNumber . reverse $ lineDeps
+                     targ <- lookupLineNumber $ last lineDeps
+                     ctrls <- mapM toControls  $ init lineDeps
                      case () of
-                       _ |    T.toLower name == "tof"
-                           || T.toLower name == "toff"
-                           || T.toLower name == "cnot" ->
-                            return $ Toff (V.fromList $ tail ld) (head ld)
-                         | otherwise -> return $ OneBit name (head ld)
+                       _ | isToff name -> return $ Toff (V.fromList $ ctrls) targ
+                         | otherwise -> return $ OneBit name targ
                     where lookupLineNumber nm =
                             case M.lookup nm indexMap of
                                 Just n -> Right n
                                 Nothing -> Left (UnknownLine nm)
+                          toControls nm | T.last nm == '\'' = Neg <$> (lookupLineNumber $ T.init nm)
+                                        | otherwise = Pos <$> lookupLineNumber nm
+                  isToff name = (T.length name > 1 && C.isDigit (T.index name 1))
+                             || T.toLower name == "tof"
+                             || T.toLower name == "toff"
+                             || T.toLower name == "cnot"
+                    where lname = T.toLower name
 
 
 data QC = QC [InfoLine] [ParsedGate]
@@ -75,7 +79,7 @@ comment = do
 
 ident :: Parser Text
 ident = do
-   id <- many1 alphaNum <* many (char ' ')
+   id <- many1 (alphaNum <|> char '\'') <* many (char ' ')
    return (T.pack id)
 
 info :: Parser [InfoLine]
