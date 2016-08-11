@@ -47,7 +47,7 @@ opts = info (helper <*> options)
               <$> strOption
               ( short 'i'
               <> value "circ.svg"
-	      <> showDefault
+              <> showDefault
               <> metavar "PATH"
               <> help "Output svg image to PATH" )
 
@@ -56,8 +56,8 @@ writeCircInfo circ imgPath = do
     let circInfo = CircuitInfo {
              numGates = gateCount circ
            , numBits = (length . circLines) circ
-           , numToff = 0
-           , numT = 0
+           , numToff = countToff circ
+           , numT = countTGates circ
            , circuitFile = imgPath
           }
     BS.putStrLn . encode $ circInfo

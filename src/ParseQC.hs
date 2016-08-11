@@ -51,6 +51,7 @@ qcToCirc (QC infoLns gs) = do
                   isToff name = (T.length name > 1 && C.isDigit (T.index name 1))
                              || T.toLower name == "tof"
                              || T.toLower name == "toff"
+                             || T.toLower name == "not"
                              || T.toLower name == "cnot"
                     where lname = T.toLower name
 
